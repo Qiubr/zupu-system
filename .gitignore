@@ -1,0 +1,25 @@
+# 运行环境与依赖
+node_modules/
+.venv*/
+venv/
+
+# 测试产物与截图（每次运行都会变，不入库）
+shots/
+
+# 传输/打包临时文件
+*.zip
+
+# 族谱真实数据备份（含真实姓名，严禁入库）
+*备份-*.json
+data/
+backup/
+
+# 编辑器与系统文件
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# 日志
+*.log

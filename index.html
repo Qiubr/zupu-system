@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>族谱管理系统</title>
+  <link rel="stylesheet" href="src/styles/main.css">
+</head>
+<body>
+
+  <div class="app">
+    <div class="brand">
+      <div class="brand-mark">谱</div>
+      <div>
+        <div class="brand-name" id="brandName">族谱管理系统</div>
+        <div class="brand-sub">本地单机版 · 无需联网</div>
+      </div>
+    </div>
+
+    <header class="topbar">
+      <div>
+        <h1 id="topTitle">成员管理</h1>
+        <div class="crumb">数据保存在本机浏览器中，请定期导出备份</div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-item"><b id="statPersons">0</b><span>成员</span></div>
+        <div class="stat-item"><b id="statBranches">0</b><span>房支</span></div>
+        <div class="stat-item"><b id="statGenerations">0</b><span>世代</span></div>
+      </div>
+    </header>
+
+    <nav class="nav" id="nav"></nav>
+
+    <main class="main" id="main">
+      <div class="empty"><div class="big">⏳</div><p>正在加载…</p></div>
+    </main>
+  </div>
+
+  <div class="toast-host" id="toastHost"></div>
+  <div id="modalHost"></div>
+
+  <script src="src/db/schema.js"></script>
+  <script src="src/db/seed.js"></script>
+  <script src="src/db/idb.js"></script>
+  <script src="src/db/repo.js"></script>
+  <script src="src/db/lineage.js"></script>
+  <script src="src/ui/util.js"></script>
+  <script src="src/ui/views/member-list.js"></script>
+  <script src="src/ui/views/member-form.js"></script>
+  <script src="src/ui/views/tree.js"></script>
+  <script src="src/ui/views/data.js"></script>
+  <script src="src/ui/app.js"></script>
+</body>
+</html>
