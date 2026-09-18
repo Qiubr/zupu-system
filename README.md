@@ -76,8 +76,31 @@ NODE_PATH="C:/Users/Administrator/.workbuddy/binaries/node/workspace/node_module
 
 示例数据由 `src/db/seed.js` 承载，属于代码，会随版本一起同步——所以换机器后示例数据照样在。
 
-## 版本管理约定
+## 版本管理（GitHub）
 
+本地仓库已初始化。推送到 GitHub 的步骤：
+
+```bash
+cd D:\WorkBuddy\Apps\zupu-system
+
+git remote add origin https://github.com/<你的用户名>/zupu-system.git
+git branch -M main
+git push -u origin main
+```
+
+> 首次推送由 Git Credential Manager 弹出浏览器授权（本机已安装 2.9.1），
+> 选「Sign in with your browser」登录授权即可，**不需要输入密码**。
+
+换机器后：
+
+```bash
+git clone https://github.com/<你的用户名>/zupu-system.git
+cd zupu-system
+git pull --rebase     # 之后每次开工前
+```
+
+- 仓库请务必设为 **Private**（家族信息）
 - 代码、文档、测试、示例数据（`seed.js`）→ 入 Git
 - 真实族谱数据备份、截图、依赖目录、打包文件 → 不入 Git
 - 提交信息用中文简述改动，例：`修复入赘子女世系断链`
+- 推送到远端、Token / SSH 凭据的正确用法见 `docs/git-推送与凭据.md`（**切勿把账号密码或 Token 交给任何人**）
