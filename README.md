@@ -45,6 +45,9 @@ tests/
   smoke.js              核心逻辑测试
   ui-smoke.js           全链路测试（jsdom + fake-indexeddb）
   create-cases.js       创建场景用例集（自动生成报告）
+  edge-cases.js         边界场景用例集（68 项）
+  scenario-cases.js     宗法场景模拟用例集（52 项）
+  stress-cases.js       压力测试 + 补充场景用例集（52 项）
   shoot.js              真机渲染 + 截图（需本地 Edge）
 ```
 
@@ -57,6 +60,9 @@ NODE_PATH="C:/Users/Administrator/.workbuddy/binaries/node/workspace/node_module
 "$NODE" tests/smoke.js          # 核心逻辑
 "$NODE" tests/ui-smoke.js       # 全链路
 "$NODE" tests/create-cases.js   # 创建场景（并生成 docs/create-cases-report.md）
+"$NODE" tests/edge-cases.js     # 边界场景（缺字段/环数据/断链/称谓推算边界）
+"$NODE" tests/scenario-cases.js # 宗法场景模拟（多段婚姻/入赘/出赘/过继组合）
+"$NODE" tests/stress-cases.js   # 压力测试（4300+人建树/深链/畸形数据/称谓矩阵）
 "$NODE" tests/shoot.js          # 真机截图（需 Edge，产出至 shots/）
 ```
 
