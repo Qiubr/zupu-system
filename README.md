@@ -93,7 +93,7 @@ NODE_PATH="C:/Users/Administrator/.workbuddy/binaries/node/workspace/node_module
 ```bash
 cd d:\VSCode\Github\zupu-system
 
-git remote add origin https://github.com/<你的用户名>/zupu-system.git
+git remote add origin https://github.com/Qiubr/zupu-system.git
 git branch -M main
 git push -u origin main
 ```
@@ -104,7 +104,7 @@ git push -u origin main
 换机器后：
 
 ```bash
-git clone https://github.com/<你的用户名>/zupu-system.git
+git clone https://github.com/Qiubr/zupu-system.git
 cd zupu-system
 git pull --rebase     # 之后每次开工前
 ```
