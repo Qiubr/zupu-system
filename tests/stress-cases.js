@@ -46,7 +46,7 @@ console.log('\n【A】千级数据压力：8 世代 × 每男 3 子 ≈ 1450 人
   const nextId = () => 'P' + String(++idSeq).padStart(4, '0');
 
   // 第 1 世：始祖
-  const root = { id: nextId(), surname: '丘', name: '始祖', gender: 'M', category: 'clan', lineageType: 'clan', generation: 1, branchId: 'B01', sortKey: 'B01-G001-0001' };
+  const root = { id: nextId(), surname: '丘', name: '始祖', gender: 'M', category: 'clan', lineageType: 'clan', generation: 1, branchId: 'B01', sortKey: 'B0001-G001-0001' };
   persons.push(root);
   let fathers = [root];
 
@@ -135,12 +135,12 @@ console.log('\n【B】深链压力：600 代单线链');
 console.log('\n【C】特殊家庭形态');
 {
   // C1 连续两代入赘
-  const gf = { id: 'Z-GF', surname: '丘', name: '世昌', gender: 'M', category: 'clan', generation: 3, branchId: 'B02', sortKey: 'B02-G003-0001' };
-  const m1 = { id: 'Z-M1', surname: '丘', name: '淑贞', gender: 'F', category: 'clan', generation: 4, branchId: 'B02', fatherId: 'Z-GF', sortKey: 'B02-G004-0001' };
-  const r1 = { id: 'Z-R1', surname: '林', name: '文彬', gender: 'M', category: 'spouse', generation: 4, branchId: 'B02', birthOrder: 1, sortKey: 'B02-G004-9001' };
-  const m2 = { id: 'Z-M2', surname: '丘', name: '巧云', gender: 'F', category: 'clan', generation: 5, branchId: 'B02', motherId: 'Z-M1', fatherId: 'Z-R1', sortKey: 'B02-G005-0001' };
-  const r2 = { id: 'Z-R2', surname: '赵', name: '国良', gender: 'M', category: 'spouse', generation: 5, branchId: 'B02', birthOrder: 1, sortKey: 'B02-G005-9001' };
-  const c  = { id: 'Z-C', surname: '丘', name: '开泰', gender: 'M', category: 'clan', generation: 6, branchId: 'B02', motherId: 'Z-M2', fatherId: 'Z-R2', sortKey: 'B02-G006-0001' };
+  const gf = { id: 'Z-GF', surname: '丘', name: '世昌', gender: 'M', category: 'clan', generation: 3, branchId: 'B02', sortKey: 'B0002-G003-0001' };
+  const m1 = { id: 'Z-M1', surname: '丘', name: '淑贞', gender: 'F', category: 'clan', generation: 4, branchId: 'B02', fatherId: 'Z-GF', sortKey: 'B0002-G004-0001' };
+  const r1 = { id: 'Z-R1', surname: '林', name: '文彬', gender: 'M', category: 'spouse', generation: 4, branchId: 'B02', birthOrder: 1, sortKey: 'B0002-G004-9001' };
+  const m2 = { id: 'Z-M2', surname: '丘', name: '巧云', gender: 'F', category: 'clan', generation: 5, branchId: 'B02', motherId: 'Z-M1', fatherId: 'Z-R1', sortKey: 'B0002-G005-0001' };
+  const r2 = { id: 'Z-R2', surname: '赵', name: '国良', gender: 'M', category: 'spouse', generation: 5, branchId: 'B02', birthOrder: 1, sortKey: 'B0002-G005-9001' };
+  const c  = { id: 'Z-C', surname: '丘', name: '开泰', gender: 'M', category: 'clan', generation: 6, branchId: 'B02', motherId: 'Z-M2', fatherId: 'Z-R2', sortKey: 'B0002-G006-0001' };
   const ms = [
     { id: 'ZM1', husbandId: 'Z-R1', wifeId: 'Z-M1', type: 'ruzhui', order: 1 },
     { id: 'ZM2', husbandId: 'Z-R2', wifeId: 'Z-M2', type: 'ruzhui', order: 1 }
@@ -157,12 +157,12 @@ console.log('\n【C】特殊家庭形态');
   ok(S.isAncestor('Z-M1', 'Z-C', map), '外祖母经母系边可达');
 
   // C2 过继 + 入赘叠加：入赘家庭之子过继给本族叔父
-  const ufs = { id: 'A-UF', surname: '丘', name: '志本', gender: 'M', category: 'clan', generation: 4, branchId: 'B03', fatherId: 'A-GF', sortKey: 'B03-G004-0001' };
-  const bf2 = { id: 'A-BF', surname: '丘', name: '志源', gender: 'F', category: 'clan', generation: 4, branchId: 'B03', fatherId: 'A-GF', sortKey: 'B03-G004-0002' };
-  const agf = { id: 'A-GF', surname: '丘', name: '建椿', gender: 'M', category: 'clan', generation: 3, branchId: 'B03', sortKey: 'B03-G003-0001' };
+  const ufs = { id: 'A-UF', surname: '丘', name: '志本', gender: 'M', category: 'clan', generation: 4, branchId: 'B03', fatherId: 'A-GF', sortKey: 'B0003-G004-0001' };
+  const bf2 = { id: 'A-BF', surname: '丘', name: '志源', gender: 'F', category: 'clan', generation: 4, branchId: 'B03', fatherId: 'A-GF', sortKey: 'B0003-G004-0002' };
+  const agf = { id: 'A-GF', surname: '丘', name: '建椿', gender: 'M', category: 'clan', generation: 3, branchId: 'B03', sortKey: 'B0003-G003-0001' };
   const bc2 = { id: 'A-BC', surname: '丘', name: '承嗣', gender: 'M', category: 'clan', generation: 5, branchId: 'B03',
-    motherId: 'A-BF', fatherId: 'A-SP', adoptiveFatherId: 'A-UF', sortKey: 'B03-G005-0001' };
-  const asp = { id: 'A-SP', surname: '郑', name: '老实', gender: 'M', category: 'spouse', generation: 4, branchId: 'B03', birthOrder: 1, sortKey: 'B03-G004-9001' };
+    motherId: 'A-BF', fatherId: 'A-SP', adoptiveFatherId: 'A-UF', sortKey: 'B0003-G005-0001' };
+  const asp = { id: 'A-SP', surname: '郑', name: '老实', gender: 'M', category: 'spouse', generation: 4, branchId: 'B03', birthOrder: 1, sortKey: 'B0003-G004-9001' };
   const ps2 = [agf, ufs, bf2, asp, bc2];
   const ms2 = [{ id: 'AM1', husbandId: 'A-SP', wifeId: 'A-BF', type: 'ruzhui', order: 1 }];
   const map2 = new Map(ps2.map(p => [p.id, p]));
@@ -176,9 +176,9 @@ console.log('\n【C】特殊家庭形态');
   eq(L.kinship(agf.id, bc2.id, map2), '孙', '祖父 → 过继出去的孙（经嗣父线仍可达）');
 
   // C3 复婚（同一对两次婚姻）+ 丧偶再娶
-  const hh = { id: 'C-H', surname: '丘', name: '志清', gender: 'M', category: 'clan', generation: 4, branchId: 'B01', sortKey: 'B01-G004-0001' };
-  const w1 = { id: 'C-W1', surname: '孙', name: '巧珍', gender: 'F', category: 'spouse', generation: 4, branchId: 'B01', birthOrder: 1, sortKey: 'B01-G004-9001' };
-  const w2 = { id: 'C-W2', surname: '何', name: '丽', gender: 'F', category: 'spouse', generation: 4, branchId: 'B01', birthOrder: 2, sortKey: 'B01-G004-9002' };
+  const hh = { id: 'C-H', surname: '丘', name: '志清', gender: 'M', category: 'clan', generation: 4, branchId: 'B01', sortKey: 'B0001-G004-0001' };
+  const w1 = { id: 'C-W1', surname: '孙', name: '巧珍', gender: 'F', category: 'spouse', generation: 4, branchId: 'B01', birthOrder: 1, sortKey: 'B0001-G004-9001' };
+  const w2 = { id: 'C-W2', surname: '何', name: '丽', gender: 'F', category: 'spouse', generation: 4, branchId: 'B01', birthOrder: 2, sortKey: 'B0001-G004-9002' };
   const ms3 = [
     { id: 'C1', husbandId: 'C-H', wifeId: 'C-W1', type: 'marry', order: 1, status: 'divorced', startYear: '1980', endYear: '1985' },
     { id: 'C2', husbandId: 'C-H', wifeId: 'C-W1', type: 'marry', order: 2, status: 'current', startYear: '1990', notes: '复婚' },
@@ -206,7 +206,7 @@ console.log('\n【D】数据畸形鲁棒性');
   eq(S.nextPersonId('B01', 1, [{}]), 'B01-G01-001', '畸形人员对象不干扰 ID 生成');
   // 父子边互指但非环（父指向不存在的祖父）
   const ps = [
-    { id: 'K', category: 'clan', generation: 2, fatherId: 'GHOST', sortKey: 'B01-G002-0001' }
+    { id: 'K', category: 'clan', generation: 2, fatherId: 'GHOST', sortKey: 'B0001-G002-0001' }
   ];
   eq(L.buildForest(ps, []).length, 1, '空婚姻数组容错');
 }
@@ -217,26 +217,26 @@ console.log('\n【E】ID 与 sortKey 边界');
   eq(S.nextPersonId('B01', 3, [{ id: 'B01-G03-999' }]), 'B01-G03-1000', '序号 999 → 1000 进位');
   eq(S.nextPersonId('B1', 3, [{ id: 'B1-G03-005' }]), 'B1-G03-006', '非标房支 ID（B1）独立计数');
   eq(S.nextPersonId('B01', 100, [{ id: 'B01-G100-005' }]), 'B01-G100-006', '百位世次前缀匹配（G100）');
-  eq(S.buildSortKey({ branchId: 'B01', generation: 1000, birthOrder: 1 }).length, 14, '【文档化】世次 ≥1000 破坏定宽（13→14 位，字典序错乱；实际不可能出现）');
-  // 房支排序：B02 < B10 字典序正确
+  eq(S.buildSortKey({ branchId: 'B01', generation: 1000, birthOrder: 1 }).length, 16, '【文档化】世次 ≥1000 破坏定宽（15→16 位，字典序错乱；实际不可能出现）');
+  // 房支排序：B02 < B03 < B10（按数字而非字典序，故 10 排在 3 之后）
   const arr = [
-    { sortKey: 'B10-G001-0001' }, { sortKey: 'B02-G001-0001' }, { sortKey: 'B03-G001-0001' }
-  ].sort(S.compareBySortKey).map(x => x.sortKey.slice(0, 3));
-  eq(arr.join(','), 'B02,B03,B10', '房支号两位以内字典序正确');
+    { sortKey: 'B0010-G001-0001' }, { sortKey: 'B0002-G001-0001' }, { sortKey: 'B0003-G001-0001' }
+  ].sort(S.compareBySortKey).map(x => x.sortKey.split('-')[0]);
+  eq(arr.join(','), 'B0002,B0003,B0010', '房支号两位以内排序正确（B02 < B03 < B10）');
 }
 
 /* ══════════ F. 称谓矩阵补充 ══════════ */
 console.log('\n【F】称谓矩阵补充');
 {
   const ps = [
-    { id: 'R',  gender: 'M', category: 'clan', generation: 1, sortKey: 'B01-G001-0001' },
-    { id: 'A1', gender: 'M', category: 'clan', generation: 2, fatherId: 'R', sortKey: 'B01-G002-0001' },
-    { id: 'A2', gender: 'F', category: 'clan', generation: 2, fatherId: 'R', sortKey: 'B01-G002-0002' },
-    { id: 'B1', gender: 'M', category: 'clan', generation: 2, fatherId: 'R', sortKey: 'B01-G002-0003' },
-    { id: 'A1S', gender: 'M', category: 'clan', generation: 3, fatherId: 'A1', sortKey: 'B01-G003-0001' },
-    { id: 'A1D', gender: 'F', category: 'clan', generation: 3, fatherId: 'A1', sortKey: 'B01-G003-0002' },
-    { id: 'A1SS', gender: 'M', category: 'clan', generation: 4, fatherId: 'A1S', sortKey: 'B01-G004-0001' },
-    { id: 'A1SD', gender: 'F', category: 'clan', generation: 4, fatherId: 'A1S', sortKey: 'B01-G004-0002' }
+    { id: 'R',  gender: 'M', category: 'clan', generation: 1, sortKey: 'B0001-G001-0001' },
+    { id: 'A1', gender: 'M', category: 'clan', generation: 2, fatherId: 'R', sortKey: 'B0001-G002-0001' },
+    { id: 'A2', gender: 'F', category: 'clan', generation: 2, fatherId: 'R', sortKey: 'B0001-G002-0002' },
+    { id: 'B1', gender: 'M', category: 'clan', generation: 2, fatherId: 'R', sortKey: 'B0001-G002-0003' },
+    { id: 'A1S', gender: 'M', category: 'clan', generation: 3, fatherId: 'A1', sortKey: 'B0001-G003-0001' },
+    { id: 'A1D', gender: 'F', category: 'clan', generation: 3, fatherId: 'A1', sortKey: 'B0001-G003-0002' },
+    { id: 'A1SS', gender: 'M', category: 'clan', generation: 4, fatherId: 'A1S', sortKey: 'B0001-G004-0001' },
+    { id: 'A1SD', gender: 'F', category: 'clan', generation: 4, fatherId: 'A1S', sortKey: 'B0001-G004-0002' }
   ];
   const map = new Map(ps.map(p => [p.id, p]));
   eq(L.kinship('A1SS', 'B1', map), '伯祖父/叔祖父', '侄孙 → 祖父之弟（伯祖父/叔祖父）');
@@ -248,14 +248,14 @@ console.log('\n【F】称谓矩阵补充');
   eq(L.kinship('A2', 'A1SS', map), '侄孙', '姑祖母 → 娘家侄孙（父系兄弟之孙，隔两代）');
   // 跨支系同辈远亲
   const ps2 = [
-    { id: 'T0', gender: 'M', category: 'clan', generation: 1, sortKey: 'B01-G001-0001' },
-    { id: 'T1a', gender: 'M', category: 'clan', generation: 2, fatherId: 'T0', sortKey: 'B01-G002-0001' },
-    { id: 'T1b', gender: 'M', category: 'clan', generation: 2, fatherId: 'T0', sortKey: 'B01-G002-0002' },
-    { id: 'T2a', gender: 'M', category: 'clan', generation: 3, fatherId: 'T1a', sortKey: 'B01-G003-0001' },
-    { id: 'T3a', gender: 'M', category: 'clan', generation: 4, fatherId: 'T2a', sortKey: 'B01-G004-0001' },
-    { id: 'T2b', gender: 'M', category: 'clan', generation: 3, fatherId: 'T1b', sortKey: 'B01-G003-0002' },
-    { id: 'T3b', gender: 'M', category: 'clan', generation: 4, fatherId: 'T2b', sortKey: 'B01-G004-0002' },
-    { id: 'T4b', gender: 'M', category: 'clan', generation: 5, fatherId: 'T3b', sortKey: 'B01-G005-0001' }
+    { id: 'T0', gender: 'M', category: 'clan', generation: 1, sortKey: 'B0001-G001-0001' },
+    { id: 'T1a', gender: 'M', category: 'clan', generation: 2, fatherId: 'T0', sortKey: 'B0001-G002-0001' },
+    { id: 'T1b', gender: 'M', category: 'clan', generation: 2, fatherId: 'T0', sortKey: 'B0001-G002-0002' },
+    { id: 'T2a', gender: 'M', category: 'clan', generation: 3, fatherId: 'T1a', sortKey: 'B0001-G003-0001' },
+    { id: 'T3a', gender: 'M', category: 'clan', generation: 4, fatherId: 'T2a', sortKey: 'B0001-G004-0001' },
+    { id: 'T2b', gender: 'M', category: 'clan', generation: 3, fatherId: 'T1b', sortKey: 'B0001-G003-0002' },
+    { id: 'T3b', gender: 'M', category: 'clan', generation: 4, fatherId: 'T2b', sortKey: 'B0001-G004-0002' },
+    { id: 'T4b', gender: 'M', category: 'clan', generation: 5, fatherId: 'T3b', sortKey: 'B0001-G005-0001' }
   ];
   const map2 = new Map(ps2.map(p => [p.id, p]));
   eq(L.kinship('T3a', 'T3b', map2), '从堂兄弟', '同曾祖隔一代支 → 从堂兄弟');

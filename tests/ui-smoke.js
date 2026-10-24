@@ -26,14 +26,24 @@ function ok(cond, label, extra) {
 function eq(a, b, label) { ok(a === b, label, '期望 ' + JSON.stringify(b) + '，实际 ' + JSON.stringify(a)); }
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
+/** 轮询等待条件成立（分批渲染等跨帧场景，固定 sleep 在机器繁忙时会误判） */
+async function waitFor(pred, timeout) {
+  const t0 = Date.now();
+  while (Date.now() - t0 < (timeout || 2000)) {
+    if (pred()) return true;
+    await sleep(25);
+  }
+  return false;
+}
+
 function makeCtxStub() {
-  const store = {};
+  const store = { __calls: {} };      // 记录调用次数，供「是否真的画了东西」断言使用
   return new Proxy(store, {
     get(t, k) {
       if (k === 'measureText') return () => ({ width: 12 });
       if (k === 'canvas') return null;
       if (k in t) return t[k];
-      return function () {};
+      return function () { t.__calls[k] = (t.__calls[k] || 0) + 1; };
     },
     set(t, k, v) { t[k] = v; return true; }
   });
@@ -68,7 +78,11 @@ async function main() {
   win.indexedDB = idbImpl.indexedDB;
   win.IDBKeyRange = idbImpl.IDBKeyRange;
 
-  win.HTMLCanvasElement.prototype.getContext = function () { return makeCtxStub(); };
+  // 同一 canvas 复用同一个 ctx stub，便于统计绘制调用
+  win.HTMLCanvasElement.prototype.getContext = function () {
+    if (!this.__ctx) this.__ctx = makeCtxStub();
+    return this.__ctx;
+  };
 
   // 在 jsdom 自身的执行环境里跑脚本，保证 window / document 与 DOM 对象同 realm
   FILES.forEach(function (f) {
@@ -99,6 +113,13 @@ async function main() {
   ok(firstRow.indexOf('守义') >= 0, '首行为始祖守义', firstRow.slice(0, 40));
   ok(doc.querySelector('#mlTableWrap').textContent.indexOf('配李氏秀英') >= 0, '德福行展示配偶「配李氏秀英」');
   ok(doc.querySelector('#mlTableWrap').textContent.indexOf('嗣父') >= 0, '志强行标注嗣父');
+
+  // 行内按钮走事件委托（分批渲染下不再逐行绑定）
+  const viewBtn = doc.querySelector('#mlTableWrap [data-act="view"]');
+  viewBtn.dispatchEvent(new win.MouseEvent('click', { bubbles: true }));
+  const dlg = doc.querySelector('.modal');
+  ok(dlg && dlg.textContent.indexOf('成员详情') >= 0, '行内「详情」按钮经事件委托打开详情弹层');
+  ZP.ui.closeModal();
 
   console.log('\n[3] 检索与筛选');
   const search = doc.querySelector('#mlSearch');
@@ -148,7 +169,7 @@ async function main() {
   };
   let r = await ZP.repo.savePerson(newRec, true);
   ok(r.ok, '新增成员成功', (r.errors || []).join('；'));
-  eq(r.person.sortKey, 'B01-G004-0008', 'sortKey 自动预计算');
+  eq(r.person.sortKey, 'B0001-G004-0008', 'sortKey 自动预计算');
   eq(await ZP.idb.count('persons'), N_PERSON + 1, '库中成员数 ' + (N_PERSON + 1));
 
   console.log('\n[5] 校验规则');
@@ -279,7 +300,18 @@ async function main() {
   ZP.ui.closeModal();
   ok(!doc.querySelector('#mfForm'), '弹层可正常关闭');
 
-  console.log('\n[9] 世系图');
+  console.log('\n[9] 编辑表单回填（人物下拉克隆）');
+  const defu = ZP.app.state.map.get('B01-G02-001');
+  ZP.views.memberForm.open(defu, ZP.app.state, function () {});
+  const ef = doc.querySelector('#mfForm');
+  ok(!!ef, '编辑表单已渲染');
+  eq(ef.elements.name.value, '德福', '姓名字段回填');
+  eq(ef.elements.fatherId.value, 'B01-G01-001', '生父下拉（模板）回填正确');
+  eq(ef.elements.motherId.value, 'B01-G01-002', '生母下拉（克隆体）回填正确');
+  eq(ef.elements.adoptiveFatherId.value, '', '嗣父下拉（克隆体）为空');
+  ZP.ui.closeModal();
+
+  console.log('\n[10] 世系图');
   ZP.app.navigate('tree');
   ok(doc.querySelector('#treeCanvas'), '世系图画布已创建');
   eq(ZP.app.state.genesis.length, 1, '世系森林 1 个根');
@@ -287,7 +319,13 @@ async function main() {
   eq(clanCount, ZP.SEED.persons.filter(p => p.category === 'clan').length, '主干本族成员 ' + clanCount + ' 人（配偶不入主干）');
   eq(doc.querySelector('#topTitle').textContent, '世系图', '标题切换为世系图');
 
-  console.log('\n[10] 数据视图与备份');
+  // 绘制链路：画布未布局（宽高 0）时不做裁剪，节点仍应全部绘制
+  const cv = doc.querySelector('#treeCanvas');
+  const drawn = (cv.__ctx && cv.__ctx.__calls.fillText) || 0;
+  ok(drawn >= clanCount, '节点已绘制（fillText ' + drawn + ' 次，主干 ' + clanCount + ' 人）');
+  ok((cv.__ctx.__calls.stroke || 0) > 0, '连线已绘制');
+
+  console.log('\n[11] 数据视图与备份');
   ZP.app.navigate('data');
   ok(doc.querySelector('#dataStats').textContent.indexOf('成员总数') >= 0, '统计卡片已渲染');
   eq(doc.querySelectorAll('#branchWrap tbody tr').length, N_BRANCH, '房支表 ' + N_BRANCH + ' 行');
@@ -301,13 +339,37 @@ async function main() {
   eq(res.persons, N_PERSON, '导入回写 ' + N_PERSON + ' 名成员');
   eq(await ZP.idb.count('persons'), N_PERSON, '导入后库内成员数一致');
 
-  console.log('\n[11] 详情弹层与称谓');
+  console.log('\n[12] 详情弹层与称谓');
   ZP.views.members.showDetail('B01-G02-001');
   const modalText = doc.querySelector('.modal').textContent;
   ok(modalText.indexOf('德福') >= 0, '详情弹层显示德福');
   ok(modalText.indexOf('李氏秀英') >= 0, '详情弹层显示配偶');
   ok(modalText.indexOf('配李氏秀英') >= 0 || modalText.indexOf('子') >= 0, '详情弹层显示亲属与称谓');
   ZP.ui.closeModal();
+
+  console.log('\n[13] 大列表分批渲染');
+  const realPersons = ZP.app.state.persons.slice();
+  const fakes = [];
+  for (let i = 0; i < 260; i++) {
+    fakes.push(Object.assign({}, realPersons[0], { id: 'TMP-' + i, name: '临时' + i, notes: '' }));
+  }
+  ZP.app.state.persons = realPersons.concat(fakes);
+  ZP.app.navigate('members');
+  // 轮询等待：分批渲染跨多帧，固定 sleep 在机器繁忙时会误判
+  const total = realPersons.length + fakes.length;
+  const firstPaint = doc.querySelectorAll('#mlTableWrap tbody tr').length;
+  ok(firstPaint > 0 && firstPaint < total, '首屏先出一批（' + firstPaint + ' / ' + total + ' 行）');
+  await waitFor(function () {
+    return doc.querySelectorAll('#mlTableWrap tbody tr').length >= total;
+  }, 3000);
+  const bigRows = doc.querySelectorAll('#mlTableWrap tbody tr').length;
+  eq(bigRows, total, '分批渲染最终补全 ' + total + ' 行');
+  ZP.app.state.persons = realPersons;
+  ZP.app.navigate('members');
+  await waitFor(function () {
+    return doc.querySelectorAll('#mlTableWrap tbody tr').length >= N_PERSON;
+  }, 3000);
+  eq(doc.querySelectorAll('#mlTableWrap tbody tr').length, N_PERSON, '还原后回到 ' + N_PERSON + ' 行');
 
   /* ── 收尾 ── */
   console.log('\n──────────────────────────');

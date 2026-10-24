@@ -10,6 +10,11 @@
   var filter = { q: '', branchId: '', category: '' };
   var _state = null;
   var _spouseMap = new Map();
+  var _paintToken = 0;                 // 标记当前有效的表格渲染，便于作废过期的分批渲染
+  var ROW_CHUNK = 200;                 // 单批插入行数
+  var raf = (typeof window !== 'undefined' && window.requestAnimationFrame)
+    ? window.requestAnimationFrame.bind(window)
+    : function (fn) { setTimeout(fn, 16); };
 
   /* ───────── 渲染 ───────── */
 
@@ -44,7 +49,32 @@
       ZP.views.memberForm.open(null, state, function () { ZP.app.refresh(); });
     });
 
+    // 行内操作用事件委托：行数上千时不必为每行按钮各挂一个监听器，
+    // 也免去了分批渲染时反复绑定
+    bindRowEvents(ui.$('#mlTableWrap'));
+
     paintTable();
+  }
+
+  /**
+   * 表格区事件委托（一次性绑定）
+   * 覆盖行内 [data-act] 操作按钮与 [data-open] 姓名链接
+   */
+  function bindRowEvents(wrap) {
+    if (!wrap) return;
+    wrap.addEventListener('click', function (e) {
+      var actEl = e.target.closest ? e.target.closest('[data-act]') : null;
+      if (actEl) {
+        var id = actEl.getAttribute('data-id');
+        var act = actEl.getAttribute('data-act');
+        if (act === 'view') showDetail(id);
+        else if (act === 'edit') ZP.views.memberForm.open(_state.map.get(id), _state, function () { ZP.app.refresh(); });
+        else if (act === 'del') removePerson(id);
+        return;
+      }
+      var openEl = e.target.closest ? e.target.closest('[data-open]') : null;
+      if (openEl) showDetail(openEl.getAttribute('data-open'));
+    });
   }
 
   function branchOptions(state) {
@@ -99,7 +129,8 @@
       return;
     }
 
-    var html = '<table class="table"><thead><tr>' +
+    var token = ++_paintToken;   // 新的渲染会让仍在进行中的分批渲染作废
+    wrap.innerHTML = '<table class="table"><thead><tr>' +
       '<th style="width:78px">世次</th>' +
       '<th>姓名 / 谱中称谓</th>' +
       '<th style="width:56px">性别</th>' +
@@ -108,26 +139,20 @@
       '<th style="width:84px">房支</th>' +
       '<th style="width:74px">归属</th>' +
       '<th style="width:150px"></th>' +
-      '</tr></thead><tbody>';
+      '</tr></thead><tbody></tbody></table>';
 
-    rows.forEach(function (p) {
-      html += rowHtml(p, state);
-    });
-    html += '</tbody></table>';
-    wrap.innerHTML = html;
+    var tbody = wrap.querySelector('tbody');
+    var i = 0;
 
-    ui.$$('[data-act]', wrap).forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var id = btn.getAttribute('data-id');
-        var act = btn.getAttribute('data-act');
-        if (act === 'view') showDetail(id);
-        else if (act === 'edit') ZP.views.memberForm.open(state.map.get(id), state, function () { ZP.app.refresh(); });
-        else if (act === 'del') removePerson(id);
-      });
-    });
-    ui.$$('[data-open]', wrap).forEach(function (el) {
-      el.addEventListener('click', function () { showDetail(el.getAttribute('data-open')); });
-    });
+    // 分批插入：首屏同步出一批，其余交给下一帧，避免大族一次性解析上千行卡住界面
+    (function chunk() {
+      if (token !== _paintToken || !tbody.parentNode) return;
+      var end = Math.min(i + ROW_CHUNK, rows.length);
+      var html = '';
+      for (; i < end; i++) html += rowHtml(rows[i], state);
+      tbody.insertAdjacentHTML('beforeend', html);
+      if (i < rows.length) raf(chunk);
+    })();
   }
 
   function rowHtml(p, state) {
@@ -193,8 +218,19 @@
 
   /* ───────── 详情 ───────── */
 
-  function showDetail(id) {
-    var state = _state;
+  /**
+   * 打开成员详情
+   * @param {string} id
+   * @param {object} [state] 世系图等外部视图调用时显式传入，避免用到过期的缓存 state
+   */
+  function showDetail(id, state) {
+    state = state || _state || (ZP.app && ZP.app.state);
+    if (!state || !state.map) return;
+    // state 变化或索引尚未建立时重建配偶索引（详情弹窗可能先于列表渲染被打开）
+    if (state !== _state || !_spouseMap || !_spouseMap.size) {
+      _state = state;
+      _spouseMap = buildSpouseMap(state);
+    }
     var p = state.map.get(id);
     if (!p) return;
 
@@ -203,12 +239,13 @@
       return relItem(s, k || '配偶');
     }).join('');
 
-    var childItems = [];
-    state.persons.forEach(function (c) {
-      if (c.fatherId === id || c.motherId === id || c.adoptiveFatherId === id || c.adoptiveMotherId === id) {
-        var k = ZP.lineage.kinship(id, c.id, state.map);
-        childItems.push(relItem(c, k || '子女'));
-      }
+    var children = (state.childrenMap && state.childrenMap.get(id)) ||
+      state.persons.filter(function (c) {
+        return c.fatherId === id || c.motherId === id ||
+               c.adoptiveFatherId === id || c.adoptiveMotherId === id;
+      });
+    var childItems = children.map(function (c) {
+      return relItem(c, ZP.lineage.kinship(id, c.id, state.map) || '子女');
     });
 
     var parentItems = [];

@@ -120,7 +120,7 @@ C('A1', '本族男性：全部字段填满', '创建成功，sortKey 预计算�
   assert(r.ok, '应创建成功：' + (r.errors || []).join('；'));
   const s = await ZP.repo.getPerson('B01-G04-008');
   assert(s && s.name === '志明', '应可回读');
-  assert(s.sortKey === 'B01-G004-0004', 'sortKey 期望 B01-G004-0004，实际 ' + s.sortKey);
+  assert(s.sortKey === 'B0001-G004-0004', 'sortKey 期望 B0001-G004-0004，实际 ' + s.sortKey);
   assert(s.createdAt && s.updatedAt, '时间戳应写入');
   return 'sortKey=' + s.sortKey + '；展示名=' + ZP.schema.displayName(s);
 });
@@ -141,7 +141,7 @@ C('A3', '配偶（配氏）：展示名 = 姓+氏+名', '创建成功，展示�
   }), true);
   assert(r.ok, '应创建成功：' + (r.errors || []).join('；'));
   assert(ZP.schema.displayName(r.person) === '钱氏美凤', '展示名应为「钱氏美凤」，实际 ' + ZP.schema.displayName(r.person));
-  assert(r.person.sortKey === 'B01-G004-9001', '配偶排序位应为 9xxx，实际 ' + r.person.sortKey);
+  assert(r.person.sortKey === 'B0001-G004-9001', '配偶排序位应为 9xxx，实际 ' + r.person.sortKey);
   return '展示名=' + ZP.schema.displayName(r.person) + '；' + ZP.schema.spouseLabel(r.person);
 });
 
@@ -414,8 +414,8 @@ C('F5', '未填卒年 = 在世', '无告警，deathDate 为空', async () => {
 C('G1', 'sortKey 自动预计算（本族 / 配偶）', '本族 0001 段，配偶 9001 段', async () => {
   const a = await ZP.repo.savePerson(P({ id: 'B01-G04-008', name: '甲', birthOrder: 5 }), true);
   const b = await ZP.repo.savePerson(P({ id: 'B01-G04-009', surname: '钱', name: '乙', gender: 'F', category: 'spouse', birthOrder: 1 }), true);
-  assert(a.person.sortKey === 'B01-G004-0005', '本族 sortKey 异常：' + a.person.sortKey);
-  assert(b.person.sortKey === 'B01-G004-9001', '配偶 sortKey 异常：' + b.person.sortKey);
+  assert(a.person.sortKey === 'B0001-G004-0005', '本族 sortKey 异常：' + a.person.sortKey);
+  assert(b.person.sortKey === 'B0001-G004-9001', '配偶 sortKey 异常：' + b.person.sortKey);
   return a.person.sortKey + ' / ' + b.person.sortKey;
 });
 

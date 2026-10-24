@@ -30,11 +30,11 @@ function eq(actual, expected, label) {
 function ok(cond, label) { eq(!!cond, true, label); }
 
 console.log('\n[1] buildSortKey 缺字段与异常输入');
-eq(S.buildSortKey({}), 'B00-G099-9099'.replace('9', '0').replace(/^B00-G099/, 'B00-G099') === '' ? '' : 'B00-G099-0099', '全空字段 → B00/G99/排行99');
-eq(S.buildSortKey({ generation: '3' }), 'B00-G003-0099', '世次传字符串数字 → 正常转数值');
-eq(S.buildSortKey({ generation: NaN }), 'B00-G099-0099', '世次 NaN → 按 99 兜底');
-eq(S.buildSortKey({ branchId: 'B01', generation: 3, birthOrder: '2' }), 'B01-G003-0002', '排行传字符串 → 正常转数值');
-eq(S.buildSortKey({ branchId: 'B01', generation: 3, category: 'spouse' }), 'B01-G003-9099', '无排行配偶 → 排行 99');
+eq(S.buildSortKey({}), 'B0000-G099-0099', '全空字段 → 房支 B00 / 世次 99 / 排行 99');
+eq(S.buildSortKey({ generation: '3' }), 'B0000-G003-0099', '世次传字符串数字 → 正常转数值');
+eq(S.buildSortKey({ generation: NaN }), 'B0000-G099-0099', '世次 NaN → 按 99 兜底');
+eq(S.buildSortKey({ branchId: 'B01', generation: 3, birthOrder: '2' }), 'B0001-G003-0002', '排行传字符串 → 正常转数值');
+eq(S.buildSortKey({ branchId: 'B01', generation: 3, category: 'spouse' }), 'B0001-G003-9099', '无排行配偶 → 排行 99');
 
 console.log('\n[2] displayName / spouseLabel / bloodRemark 边界');
 eq(S.displayName(null), '', 'null 入参 → 空串');
@@ -78,9 +78,9 @@ console.log('\n[6] buildForest 断链与回退');
 // 6.1 父亲是配偶（赘婿）→ 回退本族母亲
 {
   const ps = [
-    { id: 'M1', surname: '丘', name: '志敏', category: 'clan', lineageType: 'clan', generation: 4, branchId: 'B01', sortKey: 'B01-G004-0001' },
-    { id: 'S1', surname: '王', name: '大山', category: 'spouse', lineageType: 'clan', generation: 4, branchId: 'B01', sortKey: 'B01-G004-9001' },
-    { id: 'C1', surname: '丘', name: '承轩', category: 'clan', lineageType: 'clan', generation: 5, branchId: 'B01', fatherId: 'S1', motherId: 'M1', sortKey: 'B01-G005-0001' }
+    { id: 'M1', surname: '丘', name: '志敏', category: 'clan', lineageType: 'clan', generation: 4, branchId: 'B01', sortKey: 'B0001-G004-0001' },
+    { id: 'S1', surname: '王', name: '大山', category: 'spouse', lineageType: 'clan', generation: 4, branchId: 'B01', sortKey: 'B0001-G004-9001' },
+    { id: 'C1', surname: '丘', name: '承轩', category: 'clan', lineageType: 'clan', generation: 5, branchId: 'B01', fatherId: 'S1', motherId: 'M1', sortKey: 'B0001-G005-0001' }
   ];
   const ms = [{ id: 'MR1', husbandId: 'S1', wifeId: 'M1', type: 'ruzhui', order: 1 }];
   const roots = L.buildForest(ps, ms);
@@ -92,8 +92,8 @@ console.log('\n[6] buildForest 断链与回退');
 // 6.2 只有 fatherId 指向配偶 → 兜底挂配偶
 {
   const ps = [
-    { id: 'S2', surname: '李', name: '四', category: 'spouse', generation: 3, branchId: 'B01', sortKey: 'B01-G003-9001' },
-    { id: 'C2', category: 'clan', generation: 4, branchId: 'B01', fatherId: 'S2', sortKey: 'B01-G004-0001' }
+    { id: 'S2', surname: '李', name: '四', category: 'spouse', generation: 3, branchId: 'B01', sortKey: 'B0001-G003-9001' },
+    { id: 'C2', category: 'clan', generation: 4, branchId: 'B01', fatherId: 'S2', sortKey: 'B0001-G004-0001' }
   ];
   const roots = L.buildForest(ps, []);
   eq(roots.length, 1, '仅挂配偶父 → 子女不丢（自成根）');
@@ -102,7 +102,7 @@ console.log('\n[6] buildForest 断链与回退');
 // 6.3 fatherId 指向不存在的人 → 断链变根
 {
   const ps = [
-    { id: 'C3', category: 'clan', generation: 4, branchId: 'B01', fatherId: 'GHOST', sortKey: 'B01-G004-0001' }
+    { id: 'C3', category: 'clan', generation: 4, branchId: 'B01', fatherId: 'GHOST', sortKey: 'B0001-G004-0001' }
   ];
   const roots = L.buildForest(ps, []);
   eq(roots.length, 1, '父亲 ID 不存在 → 断链者成为根（不消失）');
@@ -111,8 +111,8 @@ console.log('\n[6] buildForest 断链与回退');
 // 6.4 环数据（repo 层有防环，此处验证 API 层行为）
 {
   const ps = [
-    { id: 'RA', category: 'clan', generation: 1, fatherId: 'RB', sortKey: 'B01-G001-0001' },
-    { id: 'RB', category: 'clan', generation: 2, fatherId: 'RA', sortKey: 'B01-G002-0001' }
+    { id: 'RA', category: 'clan', generation: 1, fatherId: 'RB', sortKey: 'B0001-G001-0001' },
+    { id: 'RB', category: 'clan', generation: 2, fatherId: 'RA', sortKey: 'B0001-G002-0001' }
   ];
   const roots = L.buildForest(ps, []);
   const flat = L.flatten(roots).map(f => f.node.id);
@@ -122,9 +122,9 @@ console.log('\n[6] buildForest 断链与回退');
 // 6.5 多配偶按 order 排序（order 乱序传入）
 {
   const ps = [
-    { id: 'H1', category: 'clan', generation: 2, branchId: 'B01', sortKey: 'B01-G002-0001' },
-    { id: 'W1', surname: '张', name: '一', category: 'spouse', sortKey: 'B01-G002-9002' },
-    { id: 'W2', surname: '李', name: '二', category: 'spouse', sortKey: 'B01-G002-9001' }
+    { id: 'H1', category: 'clan', generation: 2, branchId: 'B01', sortKey: 'B0001-G002-0001' },
+    { id: 'W1', surname: '张', name: '一', category: 'spouse', sortKey: 'B0001-G002-9002' },
+    { id: 'W2', surname: '李', name: '二', category: 'spouse', sortKey: 'B0001-G002-9001' }
   ];
   const ms = [
     { id: 'M2', husbandId: 'H1', wifeId: 'W1', type: 'marry', order: 2 },
@@ -136,9 +136,9 @@ console.log('\n[6] buildForest 断链与回退');
 // 6.6 子女同级按 sortKey 排序
 {
   const ps = [
-    { id: 'P', category: 'clan', generation: 1, branchId: 'B01', sortKey: 'B01-G001-0001' },
-    { id: 'K2', category: 'clan', generation: 2, branchId: 'B01', fatherId: 'P', birthOrder: 2, sortKey: 'B01-G002-0002' },
-    { id: 'K1', category: 'clan', generation: 2, branchId: 'B01', fatherId: 'P', birthOrder: 1, sortKey: 'B01-G002-0001' }
+    { id: 'P', category: 'clan', generation: 1, branchId: 'B01', sortKey: 'B0001-G001-0001' },
+    { id: 'K2', category: 'clan', generation: 2, branchId: 'B01', fatherId: 'P', birthOrder: 2, sortKey: 'B0001-G002-0002' },
+    { id: 'K1', category: 'clan', generation: 2, branchId: 'B01', fatherId: 'P', birthOrder: 1, sortKey: 'B0001-G002-0001' }
   ];
   const roots = L.buildForest(ps, []);
   eq(roots[0].children.map(c => c.id).join(','), 'K1,K2', '同父子女按 sortKey 排序');
@@ -147,9 +147,9 @@ console.log('\n[6] buildForest 断链与回退');
 console.log('\n[7] pathToRoot / ancestorChain');
 {
   const ps = [
-    { id: 'G1', category: 'clan', generation: 1, sortKey: 'B01-G001-0001' },
-    { id: 'G2', category: 'clan', generation: 2, fatherId: 'G1', sortKey: 'B01-G002-0001' },
-    { id: 'G3', category: 'clan', generation: 3, fatherId: 'G2', sortKey: 'B01-G003-0001' }
+    { id: 'G1', category: 'clan', generation: 1, sortKey: 'B0001-G001-0001' },
+    { id: 'G2', category: 'clan', generation: 2, fatherId: 'G1', sortKey: 'B0001-G002-0001' },
+    { id: 'G3', category: 'clan', generation: 3, fatherId: 'G2', sortKey: 'B0001-G003-0001' }
   ];
   const map = new Map(ps.map(p => [p.id, p]));
   eq(L.pathToRoot('G3', map).join(','), 'G1,G2,G3', '路径从根到自身');
@@ -162,10 +162,10 @@ console.log('\n[8] kinship 称谓推算边界');
 {
   // 独立小家系：G → F, S（F、S 兄妹）→ F 之子 N
   const ps = [
-    { id: 'G', gender: 'M', category: 'clan', generation: 1, sortKey: 'B01-G001-0001' },
-    { id: 'F', gender: 'M', category: 'clan', generation: 2, fatherId: 'G', birthDate: '1960', sortKey: 'B01-G002-0001' },
-    { id: 'S', gender: 'F', category: 'clan', lineageType: 'outMarried', generation: 2, fatherId: 'G', birthDate: '1963', sortKey: 'B01-G002-0002' },
-    { id: 'N', gender: 'M', category: 'clan', generation: 3, fatherId: 'F', birthDate: '1985', sortKey: 'B01-G003-0001' }
+    { id: 'G', gender: 'M', category: 'clan', generation: 1, sortKey: 'B0001-G001-0001' },
+    { id: 'F', gender: 'M', category: 'clan', generation: 2, fatherId: 'G', birthDate: '1960', sortKey: 'B0001-G002-0001' },
+    { id: 'S', gender: 'F', category: 'clan', lineageType: 'outMarried', generation: 2, fatherId: 'G', birthDate: '1963', sortKey: 'B0001-G002-0002' },
+    { id: 'N', gender: 'M', category: 'clan', generation: 3, fatherId: 'F', birthDate: '1985', sortKey: 'B0001-G003-0001' }
   ];
   const map = new Map(ps.map(p => [p.id, p]));
   eq(L.kinship(null, 'F', map), null, '空 ID → null');
@@ -180,8 +180,8 @@ console.log('\n[8] kinship 称谓推算边界');
   eq(L.kinship('S', 'F', map), '兄', '妹 → 兄');
   // 无共同祖先
   const ps2 = [
-    { id: 'X1', gender: 'M', category: 'clan', generation: 1, sortKey: 'B09-G001-0001' },
-    { id: 'Y1', gender: 'M', category: 'clan', generation: 1, sortKey: 'B08-G001-0001' }
+    { id: 'X1', gender: 'M', category: 'clan', generation: 1, sortKey: 'B0009-G001-0001' },
+    { id: 'Y1', gender: 'M', category: 'clan', generation: 1, sortKey: 'B0008-G001-0001' }
   ];
   const map2 = new Map(ps2.map(p => [p.id, p]));
   eq(L.kinship('X1', 'Y1', map2), '无共同先祖（不同支系）', '无共同祖先 → 兜底描述');
@@ -195,16 +195,16 @@ console.log('\n[8] kinship 称谓推算边界');
   eq(L.kinship('D6', 'D1', map3), '先祖（上溯 5 代）', '6 世 → 上溯 5 代先祖');
   eq(L.kinship('D1', 'D5', map3), '玄孙', '高祖 → 玄孙（4 代直系）');
   // 真正的旁支：D2 的弟弟 D2B → 其孙 N2；D2 对 N2 应为「侄孙」
-  chain.push({ id: 'D2B', gender: 'M', category: 'clan', generation: 2, fatherId: 'D1', sortKey: 'B01-G002-0002' });
-  chain.push({ id: 'N1', gender: 'M', category: 'clan', generation: 3, fatherId: 'D2B', sortKey: 'B01-G003-0099' });
-  chain.push({ id: 'N2', gender: 'M', category: 'clan', generation: 4, fatherId: 'N1', sortKey: 'B01-G004-0099' });
+  chain.push({ id: 'D2B', gender: 'M', category: 'clan', generation: 2, fatherId: 'D1', sortKey: 'B0001-G002-0002' });
+  chain.push({ id: 'N1', gender: 'M', category: 'clan', generation: 3, fatherId: 'D2B', sortKey: 'B0001-G003-0099' });
+  chain.push({ id: 'N2', gender: 'M', category: 'clan', generation: 4, fatherId: 'N1', sortKey: 'B0001-G004-0099' });
   const map3b = new Map(chain.map(p => [p.id, p]));
   eq(L.kinship('D2', 'N2', map3b), '侄孙', '旁支：兄之孙 → 侄孙（同祖父）');
   // compareAge 双缺 → 按排行兜底
   const ps4 = [
-    { id: 'E1', gender: 'M', category: 'clan', generation: 1, sortKey: 'B01-G001-0001' },
-    { id: 'E2', gender: 'M', category: 'clan', generation: 2, fatherId: 'E1', sortKey: 'B01-G002-0001' },
-    { id: 'E3', gender: 'M', category: 'clan', generation: 2, fatherId: 'E1', sortKey: 'B01-G002-0002' }
+    { id: 'E1', gender: 'M', category: 'clan', generation: 1, sortKey: 'B0001-G001-0001' },
+    { id: 'E2', gender: 'M', category: 'clan', generation: 2, fatherId: 'E1', sortKey: 'B0001-G002-0001' },
+    { id: 'E3', gender: 'M', category: 'clan', generation: 2, fatherId: 'E1', sortKey: 'B0001-G002-0002' }
   ];
   const map4 = new Map(ps4.map(p => [p.id, p]));
   eq(L.kinship('E2', 'E3', map4), '弟', '双缺出生年排行 → 默认前者年长（文档化现状）');

@@ -243,8 +243,9 @@
     });
 
     ui.$('#seedBtn').addEventListener('click', async function () {
+      var seedCount = (ZP.SEED && ZP.SEED.persons) ? ZP.SEED.persons.length : 0;
       var yes = await ui.confirmDialog(
-        '将清空现有数据并重新载入示例族谱（10 人）。\n此操作不可撤销，确认继续？',
+        '将清空现有数据并重新载入示例族谱（' + seedCount + ' 人）。\n此操作不可撤销，确认继续？',
         { danger: true, okText: '重置' }
       );
       if (!yes) return;

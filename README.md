@@ -11,6 +11,7 @@
 - **字段级实时校验**：输入即校验，错误标在对应字段下方；防循环、ID 重复、世次一致性
 - **世次联动**：选择父母后自动提示「应为第 N 世」并支持一键采纳
 - **数据管理**：JSON 备份导出 / 导入、宗族信息与房支维护、示例数据重置
+- **示例数据规模**：10 世代 / 3 房支 / 198 人，可直接验证大族下的列表与世系图表现
 
 ## 快速开始
 
@@ -30,7 +31,7 @@ src/
     idb.js              轻量 IndexedDB 封装
     repo.js             仓储层：CRUD、校验、备份导入导出
     lineage.js          世系树构建、称谓推算
-    seed.js             示例数据（42 人 / 3 房支 / 6 世代）
+    seed.js             示例数据（198 人 / 3 房支 / 10 世代）
   ui/
     app.js              路由与状态
     util.js             DOM 与交互工具
@@ -38,11 +39,13 @@ src/
   styles/main.css       样式
 docs/
   data-model.md         数据模型定稿（唯一依据）
+  progress.md           开发进度（当前状态 / 已完成 / 待办）
   manual-test.md        手工测试清单
   create-cases-report.md  创建场景自动化用例报告
   在家测试-转移说明.md    换电脑测试的代码/数据转移说明
 tests/
   smoke.js              核心逻辑测试
+  seed-scale.js         示例数据规模测试（10 世 / 200 人）
   ui-smoke.js           全链路测试（jsdom + fake-indexeddb）
   create-cases.js       创建场景用例集（自动生成报告）
   edge-cases.js         边界场景用例集（68 项）
@@ -58,6 +61,7 @@ NODE="C:/Users/Administrator/.workbuddy/binaries/node/versions/22.22.2-3/node.ex
 NODE_PATH="C:/Users/Administrator/.workbuddy/binaries/node/workspace/node_modules"
 
 "$NODE" tests/smoke.js          # 核心逻辑
+"$NODE" tests/seed-scale.js     # 示例数据规模（10 世 / 200 人）
 "$NODE" tests/ui-smoke.js       # 全链路
 "$NODE" tests/create-cases.js   # 创建场景（并生成 docs/create-cases-report.md）
 "$NODE" tests/edge-cases.js     # 边界场景（缺字段/环数据/断链/称谓推算边界）

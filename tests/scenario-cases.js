@@ -194,7 +194,7 @@ console.log('\n【场景五】组合校验：防循环拦截、世次一致、ID
   eq(S.nextPersonId('B01', 3, ids), 'B01-G03-904', '三任配偶后续号为 904（含 9xx 配偶序号段）');
 
   // 多配偶 sortKey 排序（含 901-903 段）
-  const w = [903, 901, 902].map(n => ({ sortKey: 'B01-G003-9' + String(n).padStart(3, '0'), name: 'W' + n }));
+  const w = [903, 901, 902].map(n => ({ sortKey: 'B0001-G003-9' + String(n).padStart(3, '0'), name: 'W' + n }));
   eq(w.sort(S.compareBySortKey).map(x => x.name).join(','), 'W901,W902,W903', '配偶段 sortKey 排序稳定');
 }
 

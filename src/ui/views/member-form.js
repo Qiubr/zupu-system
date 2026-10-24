@@ -43,6 +43,7 @@
     });
 
     var form = mask.querySelector('#mfForm');
+    fillPersonSelects(form);
     // 通过 elements 集合按 name 取控件（比 form.name 的命名访问更稳妥，且兼容性更好）
     var f = form.elements;
 
@@ -203,10 +204,12 @@
         field('去世 <span class="help">有值即视为已故</span>', '<input class="input" name="deathDate" value="' + ui.esc(p.deathDate || '') + '" placeholder="留空表示在世">') +
 
         '<div class="fieldset-title">亲属关系</div>' +
-        field('生父', personSelect('fatherId', p.fatherId, state, exclude), false) +
-        field('生母', personSelect('motherId', p.motherId, state, exclude), false) +
-        field('嗣父 <span class="help">过继时填写</span>', personSelect('adoptiveFatherId', p.adoptiveFatherId, state, exclude), false, '填写嗣父后，世系图归属嗣父，并自动标注本生父') +
-        field('嗣母', personSelect('adoptiveMotherId', p.adoptiveMotherId, state, exclude), false) +
+        // 生父下拉作为模板（id=mfPersonTpl），其余三个在 open() 中克隆复用，
+        // 避免成员上千时重复解析四份同样的 option
+        field('生父', personSelect('fatherId', p.fatherId, state, exclude, true), false) +
+        field('生母', personSelectStub('motherId', p.motherId), false) +
+        field('嗣父 <span class="help">过继时填写</span>', personSelectStub('adoptiveFatherId', p.adoptiveFatherId), false, '填写嗣父后，世系图归属嗣父，并自动标注本生父') +
+        field('嗣母', personSelectStub('adoptiveMotherId', p.adoptiveMotherId), false) +
         '<div id="mfHints"></div>' +
 
         '<div class="fieldset-title fieldset-toggle" id="mfOtherToggle">其他<span class="arrow">▸</span></div>' +
@@ -241,8 +244,8 @@
       }).join('') + '</select>';
   }
 
-  /** 人物下拉：按世次分组，排除指定 id 集合 */
-  function personSelect(name, value, state, exclude) {
+  /** 人物下拉：按世次分组，排除指定 id 集合。isTpl 时作为克隆模板输出。 */
+  function personSelect(name, value, state, exclude, isTpl) {
     var groups = {};
     state.persons.forEach(function (per) {
       if (exclude && exclude.has(per.id)) return;
@@ -254,12 +257,40 @@
     gens.forEach(function (g) {
       opts += '<optgroup label="第 ' + g + ' 世">';
       groups[g].forEach(function (per) {
-        opts += '<option value="' + ui.esc(per.id) + '"' + (value === per.id ? ' selected' : '') + '>' +
+        opts += '<option value="' + ui.esc(per.id) + '">' +
           ui.esc(S.displayName(per)) + ' · ' + ui.esc(per.id) + '</option>';
       });
       opts += '</optgroup>';
     });
-    return '<select class="select" name="' + name + '">' + opts + '</select>';
+    return '<select class="select" name="' + name + '"' +
+      (isTpl ? ' id="mfPersonTpl"' : '') +
+      ' data-value="' + ui.esc(value || '') + '">' + opts + '</select>';
+  }
+
+  /** 占位下拉：结构同模板，真实 option 由 fillPersonSelects 克隆填充 */
+  function personSelectStub(name, value) {
+    return '<select class="select" name="' + name + '" data-clone="1" data-value="' +
+      ui.esc(value || '') + '"></select>';
+  }
+
+  /** 用模板 select 克隆出其余三个人物下拉，并回填各自选中值 */
+  function fillPersonSelects(form) {
+    var tpl = form.querySelector('#mfPersonTpl');
+    if (!tpl) return;
+    var tplValue = tpl.getAttribute('data-value') || '';
+    tpl.selectedIndex = -1;                 // 先清空，避免克隆体带上模板的选中态
+
+    ui.$$('[data-clone]', form).forEach(function (stub) {
+      var copy = tpl.cloneNode(true);
+      copy.removeAttribute('id');
+      copy.removeAttribute('data-clone');
+      copy.setAttribute('name', stub.getAttribute('name'));
+      copy.setAttribute('data-value', stub.getAttribute('data-value') || '');
+      copy.value = stub.getAttribute('data-value') || '';
+      if (stub.parentNode) stub.parentNode.replaceChild(copy, stub);
+    });
+
+    tpl.value = tplValue;
   }
 
   /* ───────── 提交 ───────── */
@@ -352,22 +383,24 @@
     if (onDone) onDone();
   }
 
-  /** 自身 + 全部后代（用于父母下拉排除，防循环） */
+  /** 自身 + 全部后代（用于父母下拉排除，防循环）。有子女索引时走索引，否则全量扫描兜底。 */
   function descendantsOfAndSelf(id, state) {
     var set = new Set();
     if (!id) return set;
     set.add(id);
     var queue = [id];
-    var persons = state.persons;
+    var idx = state.childrenMap;
     var guard = 0;
-    while (queue.length && guard++ < 5000) {
+    while (queue.length && guard++ < 20000) {
       var cur = queue.shift();
-      persons.forEach(function (p) {
-        if (set.has(p.id)) return;
-        if (p.fatherId === cur || p.motherId === cur || p.adoptiveFatherId === cur || p.adoptiveMotherId === cur) {
-          set.add(p.id);
-          queue.push(p.id);
-        }
+      var kids = idx ? (idx.get(cur) || []) : state.persons.filter(function (p) {
+        return p.fatherId === cur || p.motherId === cur ||
+               p.adoptiveFatherId === cur || p.adoptiveMotherId === cur;
+      });
+      kids.forEach(function (c) {
+        if (set.has(c.id)) return;
+        set.add(c.id);
+        queue.push(c.id);
       });
     }
     return set;

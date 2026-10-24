@@ -283,6 +283,10 @@
     var rel = ms.filter(function (m) { return m.husbandId === id || m.wifeId === id; });
     if (rel.length) blocked.push('存在 ' + rel.length + ' 条婚姻记录');
 
+    var ph = await idb.getAll('photos');
+    var shots = ph.filter(function (x) { return x.personId === id; });
+    if (shots.length) blocked.push('存在 ' + shots.length + ' 张关联照片');
+
     if (blocked.length) return { ok: false, errors: blocked };
 
     await idb.del('persons', id);

@@ -88,12 +88,24 @@
   };
 
   /**
+   * 房支段排序键：字母前缀 + 数字补零到 4 位
+   * 直接 padStart 会把 'B9' 变成 '0B9'（排到最前）、且 'B01' 与 'B001' 视为两支，
+   * 这里先拆出数字再补零，保证 B9 < B10、B01 与 B001 归一。
+   */
+  function branchSegment(branchId) {
+    var s = String(branchId == null || branchId === '' ? 'B00' : branchId).trim();
+    var m = /^([A-Za-z]*)(\d+)$/.exec(s);
+    if (m) return (m[1] || 'B') + m[2].padStart(4, '0');
+    return s.padStart(5, '0');   // 非「字母+数字」编号：整体右对齐，至少保证稳定
+  }
+
+  /**
    * 预计算排序键：房支 > 世次 > [本族|配偶] > 排行
    * 同世次内本族在前、配偶在后（配偶 birthOrder 兼作婚姻次序）
-   * 例 B01-G003-0002（本族行3排行2）、B01-G002-9001（配偶第1任）
+   * 例 B0001-G003-0002（本族行3排行2）、B0001-G002-9001（配偶第1任）
    */
   function buildSortKey(person) {
-    var branch = String(person.branchId || 'B00').padStart(3, '0');
+    var branch = branchSegment(person.branchId);
     var gen = String(Number(person.generation || 99)).padStart(3, '0');
     var catRank = person.category === CATEGORY.SPOUSE ? '9' : '0';
     var order = String(Number(person.birthOrder == null ? 99 : person.birthOrder)).padStart(3, '0');

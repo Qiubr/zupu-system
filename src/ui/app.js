@@ -20,6 +20,7 @@
     branches: [],
     meta: {},
     map: new Map(),
+    childrenMap: new Map(),
     genesis: null
   };
 
@@ -37,6 +38,7 @@
     state.meta = res[3];
     state.map = new Map();
     state.persons.forEach(function (p) { state.map.set(p.id, p); });
+    state.childrenMap = ZP.lineage.buildChildrenMap(state.persons);
     state.genesis = ZP.lineage.buildForest(state.persons, state.marriages);
     renderStats();
     return state;

@@ -35,15 +35,15 @@ const marriages = ZP.SEED.marriages;
 const map = new Map(persons.map(p => [p.id, p]));
 
 console.log('\n[0] 种子数据规模');
-eq(persons.length, 42, '成员 42 人');
-eq(marriages.length, 15, '婚姻 15 条');
+eq(persons.length, 198, '成员 198 人（3 房支 × 10 世代）');
+eq(marriages.length, 84, '婚姻 84 条');
 eq(ZP.SEED.branches.length, 3, '房支 3 个（长房/二房/三房）');
 const gens = [...new Set(persons.map(p => Number(p.generation)))].sort((a, b) => a - b);
-eq(gens.join(','), '1,2,3,4,5,6', '覆盖 1–6 世（>4 代）');
+eq(gens.join(','), '1,2,3,4,5,6,7,8,9,10', '覆盖 1–10 世（无断代）');
 const poem = ZP.SEED.meta.filter(m => m.key === 'generationPoem')[0].value;
 const genNames = gens.map(g => (persons.find(p => Number(p.generation) === g && p.generationName) || {}).generationName || '·').join('');
-eq(genNames, '守德建志承先', '字辈与字辈诗前六字一致（' + poem + '）');
-ok(persons.filter(p => p.category === 'spouse').length === 15, '配偶 15 人（含赘婿与外姓女）');
+eq(genNames, poem, '世代字辈与字辈诗逐字一致（' + poem + '）');
+ok(persons.filter(p => p.category === 'spouse').length === 84, '配偶 84 人（含赘婿与外姓女）');
 ok(persons.filter(p => p.lineageType === 'external').length === 2, '外系成员 2 人（随母入谱）');
 ok(persons.filter(p => p.adoptiveFatherId).length === 1, '过继 1 例');
 ok(marriages.some(m => m.type === 'ruzhui'), '含入赘婚姻');
@@ -52,8 +52,8 @@ ok(marriages.some(m => m.status === 'divorced'), '含离异婚姻');
 ok(persons.filter(p => !p.deathDate).length > 0, '含在世成员（无卒年）');
 
 console.log('\n[1] 派生函数');
-eq(S.buildSortKey({ branchId: 'B01', generation: 3, birthOrder: 2 }), 'B01-G003-0002', 'buildSortKey 定宽拼接');
-eq(S.buildSortKey({ branchId: 'B01', generation: 2, birthOrder: 1, category: 'spouse' }), 'B01-G002-9001', '配偶排在同世次本族之后');
+eq(S.buildSortKey({ branchId: 'B01', generation: 3, birthOrder: 2 }), 'B0001-G003-0002', 'buildSortKey 定宽拼接');
+eq(S.buildSortKey({ branchId: 'B01', generation: 2, birthOrder: 1, category: 'spouse' }), 'B0001-G002-9001', '配偶排在同世次本族之后');
 eq(S.displayName(map.get('B01-G02-002')), '李氏秀英', '配偶展示名 = 姓+氏+名');
 eq(S.displayName(map.get('B01-G03-001')), '建国', '本族成员展示名 = 名');
 eq(S.displayName(map.get('B01-G04-002')), '陈明', '外系成员保留姓氏');
@@ -71,7 +71,8 @@ console.log('\n[3] ID 生成');
 eq(S.nextPersonId('B01', 3, persons), 'B01-G03-006', '长房三世代下一个序号为 006');
 eq(S.nextPersonId('B02', 2, persons), 'B02-G02-003', '二房二世代下一个序号为 003');
 eq(S.nextPersonId('B03', 1, persons), 'B03-G01-001', '三房一世从 001 起');
-eq(S.nextPersonId('B01', 6, persons), 'B01-G06-002', '六世代续号');
+const g6seq = Math.max.apply(null, persons.filter(p => p.id.indexOf('B01-G06-') === 0).map(p => parseInt(p.id.slice(8), 10)));
+eq(S.nextPersonId('B01', 6, persons), 'B01-G06-' + String(g6seq + 1).padStart(3, '0'), '六世代续号（现有 ' + g6seq + ' 人）');
 
 console.log('\n[4] 建树归属');
 const roots = L.buildForest(persons, marriages);
@@ -93,7 +94,7 @@ function depthOf(nodes) {
   for (const n of nodes) d = Math.max(d, 1 + depthOf(n.children));
   return d;
 }
-eq(depthOf(roots), 6, '世系深度 6 代（始祖 → 先禾）');
+eq(depthOf(roots), 10, '世系深度 10 代（始祖守义 → 第 10 世昆字辈）');
 
 const defu = findNode('B01-G02-001', roots);
 ok(defu, '找到德福节点');

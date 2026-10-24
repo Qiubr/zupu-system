@@ -87,6 +87,27 @@
     return roots;
   }
 
+  /**
+   * 子女索引：父（含生父/生母/嗣父/嗣母）→ 子女数组，按 sortKey 排序
+   * 一次性 O(n) 构建，替代各处反复全量扫描 persons（千级数据下差异明显）。
+   * @param {Array} persons
+   * @returns {Map<string, Array>}
+   */
+  function buildChildrenMap(persons) {
+    var m = new Map();
+    (persons || []).forEach(function (p) { m.set(p.id, []); });
+    (persons || []).forEach(function (p) {
+      [p.fatherId, p.motherId, p.adoptiveFatherId, p.adoptiveMotherId].forEach(function (pid) {
+        if (!pid) return;
+        var bucket = m.get(pid);
+        if (!bucket) { bucket = []; m.set(pid, bucket); }
+        bucket.push(p);
+      });
+    });
+    m.forEach(function (list) { list.sort(S.compareBySortKey); });
+    return m;
+  }
+
   /** 前序遍历，返回 [{node, depth, parentId}] */
   function flatten(roots) {
     var out = [];
@@ -189,7 +210,7 @@
       if (n === 2) return isMale ? '祖父' : '祖母';
       if (n === 3) return isMale ? '曾祖父' : '曾祖母';
       if (n === 4) return isMale ? '高祖父' : '高祖母';
-      return (isMale ? '先祖' : '先祖') + '（上溯 ' + n + ' 代）';
+      return '先祖（上溯 ' + n + ' 代）';
     }
   }
 
@@ -212,6 +233,7 @@
   ZP.lineage = {
     lineageParentId: lineageParentId,
     buildForest: buildForest,
+    buildChildrenMap: buildChildrenMap,
     flatten: flatten,
     pathToRoot: pathToRoot,
     ancestorChain: ancestorChain,

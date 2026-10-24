@@ -120,6 +120,30 @@
     draw();
   }
 
+  /**
+   * 当前视口对应的世界坐标范围（用于绘制裁剪）
+   * 千级节点时只绘制视野内的节点，缩放/拖拽才跟得上手。
+   * @returns {object|null} 画布尚未布局（宽高为 0）时返回 null，表示不做裁剪
+   */
+  function visibleBox() {
+    var d = view.dpr;
+    var vw = view.canvas.width / d / view.scale;
+    var vh = view.canvas.height / d / view.scale;
+    if (!(vw > 0) || !(vh > 0)) return null;
+    return {
+      x0: -view.offsetX / view.scale,
+      y0: -view.offsetY / view.scale,
+      x1: -view.offsetX / view.scale + vw,
+      y1: -view.offsetY / view.scale + vh
+    };
+  }
+
+  /** 矩形是否落在视口内（外扩 pad 以容纳阴影与描边） */
+  function inView(r, box, pad) {
+    return r.x + r.w >= box.x0 - pad && r.x <= box.x1 + pad &&
+           r.y + r.h >= box.y0 - pad && r.y <= box.y1 + pad;
+  }
+
   function draw() {
     var ctx = view.ctx;
     if (!ctx) return;
@@ -133,12 +157,15 @@
     var d = view.dpr;
     ctx.setTransform(d * view.scale, 0, 0, d * view.scale, d * view.offsetX, d * view.offsetY);
 
-    // 连线
+    var box = visibleBox();
+
+    // 连线：父子任一端在视野内才画
     ctx.strokeStyle = COLORS.line;
     ctx.lineWidth = 1.2;
     view.nodes.forEach(function (node) {
       node.children.forEach(function (child) {
         var a = nodeRect(node), b = nodeRect(child);
+        if (box && !inView(a, box, 0) && !inView(b, box, 0)) return;
         var ax = a.x + a.w / 2, ay = a.y + a.h;
         var bx = b.x + b.w / 2, by = b.y;
         var midY = ay + (by - ay) / 2;
@@ -151,8 +178,10 @@
       });
     });
 
-    // 节点
-    view.nodes.forEach(function (node) { drawNode(ctx, node); });
+    // 节点：仅绘制视野内的
+    view.nodes.forEach(function (node) {
+      if (!box || inView(nodeRect(node), box, 8)) drawNode(ctx, node);
+    });
   }
 
   function drawNode(ctx, node) {
@@ -253,6 +282,7 @@
     c.addEventListener('mousedown', function (e) {
       view.dragging = true;
       view.moved = false;
+      c.classList.add('dragging');
     });
 
     c.addEventListener('click', function (e) {
@@ -264,7 +294,8 @@
 
     c.addEventListener('dblclick', function (e) {
       var node = hitTest(e.offsetX, e.offsetY);
-      if (node) views.members.showDetail(node.id);
+      // 显式传入当前 state：本视图可能在「成员管理」未渲染过时被调用
+      if (node) views.members.showDetail(node.id, view.state);
     });
 
     if (!view._bound) {
