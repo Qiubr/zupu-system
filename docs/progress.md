@@ -7,6 +7,7 @@
 | 示例数据 | 10 世代 / 3 房支 / 198 人（本族 114 + 配偶 84），年代 1740 → 当代 |
 | 自动化测试 | **429 项全通过**（7 个套件，0 失败） |
 | 代码检查 | lint 干净 |
+| 浏览器实测 | 已确认：打开后手工「重置为示例数据」，列表显示 198 人 / 10 代 |
 | 未验证项 | 真机渲染截图（`tests/shoot.js` 需本机 Edge） |
 
 测试分布：
@@ -75,6 +76,8 @@
 | 项 | 说明 | 优先级 |
 | --- | --- | --- |
 | 真机渲染验证 | 跑 `tests/shoot.js` 截图，确认 198 人下世系图与列表的实际观感 | 中 |
+| 示例数据版本检测 | 目前改动 `seed.js` 后必须手工重置才生效。计划：meta 记 `seedVersion`，启动时与代码版本比对，不一致则在数据管理页提示「示例数据已更新，是否重新载入」 | 中 |
+| 文档路径整理 | `docs/在家测试-转移说明.md` 里仍是旧机器路径 `D:\WorkBuddy\Apps\zupu-system`（README 与推送文档已改成本机实际路径） | 低 |
 | 列表虚拟滚动 | 当前 200 行分批已足够日常规模（族谱通常远小于 4000 人）；若数据量继续增长再上 | 低 |
 | 世系图子树轮廓冲突检测 | 布局为简化 Reingold-Tilford，父节点取首末子节点中点，深层多分支理论上可能重叠 | 低 |
 | 照片功能 | `photos` 表已建模、删除引用已检查，但尚无写入入口 | 低 |
@@ -83,7 +86,47 @@
 
 远端：`origin → https://github.com/Qiubr/zupu-system.git`（分支 `main`）。
 
-本机到 `github.com:443` 直连被阻断，推送需走 SSH over 443（见 `docs/git-推送与凭据.md`）：
-远端地址改用 `git@github.com:Qiubr/zupu-system.git`，且 `~/.ssh/config` 已把 `github.com` 重定向到 `ssh.github.com:443`。
+- 2026-10-24 实测 **HTTPS 直连推送成功**（`f6d0394..fb5ebc2`），此前记录的「443 被阻断」已不再复现；
+  `docs/git-推送与凭据.md` 里的 SSH over 443 方案保留作为备用，远端地址未改动。
+- 本机 Git 身份**未配置** config。提交时沿用历史作者 `丘sir <qiu@local>`，
+  通过 `git -c user.name=... -c user.email=... commit` 临时指定（不写入配置文件）。
+  想一劳永逸就自己执行 `git config --global user.name / user.email`。
 
 提交规范：中文简述改动，例 `修复入赘子女世系断链`。真实族谱备份、截图、依赖目录不入仓库。
+
+## 下次开工
+
+### 1. 环境备忘（本机特有，别再踩）
+
+| 事项 | 说明 |
+| --- | --- |
+| **VS Code 集成终端不可用** | 系统为 Windows 10 **Build 17134（1803）**，而 ConPTY 需 1809+；VS Code 1.109 起移除 Winpty 后端，集成终端报「无法启动 conpty」。已尝试 `terminal.integrated.windowsUseConptyDll: true`（预期无效）。根治需升级系统，或降级 VS Code 到 1.108 并关闭自动更新 |
+| **改用外部终端跑 git** | 项目文件夹右键 → **Git Bash Here**（最省事，免 cd）；或系统 PowerShell `cd d:\VSCode\Github\zupu-system` |
+| 项目实际路径 | `d:\VSCode\Github\zupu-system`（文档里的 `D:\WorkBuddy\Apps\zupu-system` 是旧机器路径，已修正 README 与推送文档） |
+| 测试运行方式 | 需托管 node：`NODE_PATH="C:/Users/Administrator/.workbuddy/binaries/node/workspace/node_modules" node tests/xxx.js` |
+
+### 2. 开工流程
+
+```bash
+git pull --rebase              # 换机器后 / 我在网页端改过文件时
+# 改代码
+node tests/<对应套件>.js       # 至少跑 smoke + ui-smoke
+git add -A && git commit -m "中文简述"
+git push
+```
+
+### 3. 一个必须记住的行为
+
+**示例数据只在 IndexedDB 为空时播种一次**（`repo.init()` 判断 `n === 0`）。
+改动 `src/db/seed.js` 后，浏览器不会自动更新——打开页面需手动
+「数据管理 → 重置为示例数据」才看得到新数据。录入真实成员后不要随手点重置，先导出备份。
+
+### 4. 下次优先做
+
+1. 示例数据版本检测（见待办表，中优先级）——消除上面这个手动重置的坑
+2. 真机渲染验证：`tests/shoot.js` 截图，确认 198 人下世系图与列表观感
+3. 视情况处理列表虚拟滚动、世系图子树轮廓冲突检测（均低优先级）
+
+### 5. 待确认
+
+- VS Code 终端加了 `windowsUseConptyDll` 后是否恢复（重启 VS Code 后试 `Ctrl + \``）

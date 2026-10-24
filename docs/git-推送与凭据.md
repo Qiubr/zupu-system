@@ -63,7 +63,7 @@ ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGcDOqQplGci433ztCUSd9tnuqO8xCzas1uyHcD1NI6m
 6. 回到终端执行：
 
 ```bash
-cd D:\WorkBuddy\Apps\zupu-system
+cd d:\VSCode\Github\zupu-system
 ssh -T git@github.com      # 成功会显示 Hi Qiubr! You've successfully authenticated...
 git push -u origin main
 ```

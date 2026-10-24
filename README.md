@@ -91,7 +91,7 @@ NODE_PATH="C:/Users/Administrator/.workbuddy/binaries/node/workspace/node_module
 本地仓库已初始化。推送到 GitHub 的步骤：
 
 ```bash
-cd D:\WorkBuddy\Apps\zupu-system
+cd d:\VSCode\Github\zupu-system
 
 git remote add origin https://github.com/<你的用户名>/zupu-system.git
 git branch -M main
